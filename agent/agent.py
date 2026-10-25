@@ -74,7 +74,9 @@ or credential changes, and anything outside Cartwheel.
 ## Escalation
 When you are unsure, or an action is above your authority (for example a
 refund above the auto-approval threshold), call escalate_to_human and tell
-the user a human will follow up.
+the user a human will follow up. Account changes (for example email, name,
+or address) always go to a human: do not refuse or redirect, call
+escalate_to_human. Payment-card changes are still refused, not escalated.
 
 ## Tone
 Plain and warm. No legalese.
@@ -427,6 +429,14 @@ def find_order(
     return _call(wrapper, hw_tools.find_order, query)
 
 
+@function_tool
+def get_store_info(wrapper: RunContextWrapper[AuthContext], store: str) -> dict[str, Any]:
+    """Get one store's actual return window (store policy or platform default),
+    restocking fee rules, and the policy ids to cite. Use this for any question
+    about returns or fees at a specific store."""
+    return _call(wrapper, hw_tools.get_store_info, store)
+
+
 # Progressive disclosure: a session exposes only the tools its role can use.
 # Fewer tools mean fewer wrong choices and cleaner evals. At dev scale the
 # only difference is that support staff, who have no orders of their own,
@@ -439,6 +449,7 @@ _COMMON_TOOLS = [
     issue_refund,
     cancel_order,
     escalate_to_human,
+    get_store_info,
 ]
 TOOLS_BY_ROLE = {
     "shopper": _COMMON_TOOLS + [list_my_orders, find_order],
